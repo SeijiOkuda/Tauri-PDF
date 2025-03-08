@@ -1,19 +1,6 @@
-<script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
-
-const greetMsg = ref("");
-const name = ref("");
-
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
-}
-</script>
-
 <template>
   <main class="container">
-    <h1>Welcome to Tauri + Vue okuda</h1>
+    <h1>Tauri + Vue</h1>
 
     <div class="row">
       <a href="https://vitejs.dev" target="_blank">
@@ -28,13 +15,43 @@ async function greet() {
     </div>
     <p>Click on the Tauri, Vite, and Vue logos to learn more.</p>
 
-    <form class="row" @submit.prevent="greet">
+    <!-- <form class="row" @submit.prevent="greet">
       <input id="greet-input" v-model="name" placeholder="Enter a name..." />
       <q-btn type="submit">Greet</q-btn>
-    </form>
+    </form> -->
+
+    <div class="row">
+      <q-btn @click="selectFile">Select PDF File</q-btn>
+      <q-input square readonly v-model="selectedFile"/>
+    </div>
+
     <p>{{ greetMsg }}</p>
   </main>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+// import { invoke } from "@tauri-apps/api/core";
+import { open } from "@tauri-apps/plugin-dialog";
+
+const greetMsg = ref("");
+// const name = ref("");
+const selectedFile = ref<string | null>(null);
+
+// async function greet() {
+//   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+//   greetMsg.value = await invoke("greet", { name: name.value });
+// }
+
+async function selectFile() {
+  selectedFile.value = await open({
+    multiple: false,
+    filters: [
+      { name: 'PDF Files', extensions: ['pdf'] }
+    ]
+  });
+}
+</script>
 
 <style scoped>
 .logo.vite:hover {
