@@ -25,7 +25,9 @@
       <q-input square readonly v-model="selectedFile"/>
     </div>
 
-    <p>{{ greetMsg }}</p>
+    <div>
+      <canvas ref="pdfCanvas"></canvas>
+    </div>
   </main>
 </template>
 
@@ -33,10 +35,36 @@
 import { ref } from "vue";
 // import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import workerSrc from "pdfjs-dist/build/pdf.worker?url";
 
-const greetMsg = ref("");
-// const name = ref("");
+GlobalWorkerOptions.workerSrc = workerSrc;
+
 const selectedFile = ref<string | null>(null);
+const pdfCanvas = ref<HTMLCanvasElement | null>(null);
+
+async function loadPdf(filePath: string) {
+  const loadingTask = getDocument(filePath);
+  const pdfDocument = await loadingTask.promise;
+
+  // PDFの最初のページを取得して表示
+  const page = await pdfDocument.getPage(1);
+  const scale = 1.5;
+  const viewport = page.getViewport({ scale });
+
+  if (pdfCanvas.value) {
+    const context = pdfCanvas.value.getContext("2d");
+    if (context) {
+      pdfCanvas.value.height = viewport.height;
+      pdfCanvas.value.width = viewport.width;
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+      }).promise;
+    }
+  }
+}
 
 // async function greet() {
 //   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -50,6 +78,8 @@ async function selectFile() {
       { name: 'PDF Files', extensions: ['pdf'] }
     ]
   });
+  if(!selectedFile.value) return;
+  loadPdf(selectedFile.value);
 }
 </script>
 
