@@ -34,7 +34,7 @@
 import { ref } from "vue";
 // import { invoke } from "@tauri-apps/api/core";
 // import { open } from "@tauri-apps/plugin-dialog";
-import { getDocument, GlobalWorkerOptions, PDFDocumentProxy, PDFPageProxy, PDFPageViewport } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions, PDFDocumentProxy, PDFPageProxy, PageViewport } from 'pdfjs-dist';
 import workerSrc from "pdfjs-dist/build/pdf.worker?url";
 
 GlobalWorkerOptions.workerSrc = workerSrc;
@@ -47,7 +47,7 @@ async function loadPdf(filePath: string) {
 
   const page: PDFPageProxy = await pdfDocument.getPage(1);
   const scale = 1.5;
-  const viewport: PDFPageViewport = page.getViewport({ scale });
+  const viewport: PageViewport = page.getViewport({ scale });
 
   if (pdfCanvas.value) {
     const context = pdfCanvas.value.getContext("2d");
@@ -67,6 +67,24 @@ const selectFile = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   if (!file) return;
+
+  const allowedMimeTypes = ["application/pdf"];
+  const allowedExtensions = [".pdf"];
+
+  // MIME タイプをチェック（ファイルの種類）
+  if (!allowedMimeTypes.includes(file.type)) {
+    alert("PDFファイルのみ選択できます。");
+    target.value = ""; // 選択をリセット
+    return;
+  }
+
+  // ファイル名の拡張子チェック
+  const fileName = file.name.toLowerCase();
+  if (!allowedExtensions.some((ext) => fileName.endsWith(ext))) {
+    alert("拡張子が .pdf のファイルのみ選択できます。");
+    target.value = ""; // 選択をリセット
+    return;
+  }
 
   const fileURL = URL.createObjectURL(file);
   console.log("PDF URL:", fileURL);
